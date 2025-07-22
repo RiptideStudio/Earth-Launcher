@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { simpleGit } from 'simple-git';
-import fetch from 'node-fetch';
 import extract from 'extract-zip';
 import { execSync } from 'child_process';
 import { exec, spawn, ChildProcess } from 'child_process';
@@ -202,6 +201,7 @@ ipcMain.handle('install-zip-game', async (event, downloadUrl: string, gameName: 
     const zipPath = path.join(gamePath, 'temp.zip');
     
     // Download the zip file using node-fetch
+    const { default: fetch } = await import('node-fetch');
     const response = await fetch(downloadUrl);
     if (!response.ok) {
       throw new Error(`Failed to download: ${response.statusText}`);
