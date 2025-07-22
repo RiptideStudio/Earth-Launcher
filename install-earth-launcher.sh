@@ -5,7 +5,7 @@
 
 set -e
 
-APPIMAGE_SRC=$(ls release/Earth-Launcher-*.AppImage 2>/dev/null | head -n 1)
+APPIMAGE_SRC=$(ls release/*.AppImage 2>/dev/null | head -n 1)
 ICON_SRC="icon.png"
 INSTALL_DIR="/opt/earth-launcher"
 DESKTOP_FILE="$HOME/Desktop/earth-launcher.desktop"
