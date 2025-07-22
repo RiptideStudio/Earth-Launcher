@@ -22,6 +22,9 @@ app.commandLine.appendSwitch('use-gl', 'swiftshader');
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 app.commandLine.appendSwitch('disable-shared-memory');
+// Enable ES modules with file:// URLs
+app.commandLine.appendSwitch('allow-file-access-from-files');
+app.commandLine.appendSwitch('disable-web-security');
 // --------------------------------------------------------
 
 console.log('Starting main process: main-pi.ts');
