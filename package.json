@@ -52,7 +52,7 @@
   },
   "build": {
     "appId": "com.earthlibrary.launcher",
-    "productName": "Earth Launcher",
+    "productName": "Earth-Launcher",
     "directories": {
       "output": "release"
     },
