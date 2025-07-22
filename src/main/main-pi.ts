@@ -84,7 +84,15 @@ function createWindow(): void {
       mainWindow.webContents.openDevTools();
     }
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/renderer/index.html'));
+    const rendererPath = path.join(__dirname, '../dist/renderer/index.html');
+    console.log('Attempting to load renderer from:', rendererPath);
+    console.log('Renderer file exists:', fs.existsSync(rendererPath));
+    if (!fs.existsSync(rendererPath)) {
+      console.error('Renderer HTML file does not exist!');
+      console.log('Current directory:', __dirname);
+      console.log('Available files in current dir:', fs.readdirSync(__dirname));
+    }
+    mainWindow.loadFile(rendererPath);
   }
 
   mainWindow.once('ready-to-show', () => {
