@@ -6,6 +6,10 @@ import * as https from 'https';
 import * as zlib from 'zlib';
 import * as stream from 'stream';
 import { promisify } from 'util';
+import extract from 'extract-zip';
+import { exec, spawn } from 'child_process';
+import { shell } from 'electron';
+import { rmSync } from 'fs';
 
 console.log('Starting main process: main.ts');
 
@@ -159,7 +163,6 @@ ipcMain.handle('install-zip-game', async (event, downloadUrl: string, gameName: 
     });
     
     // Extract the zip file
-    const extract = require('extract-zip');
     await extract(zipPath, { dir: gamePath });
     
     // Remove the temporary zip file
@@ -454,11 +457,9 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
       const executablePath = path.join(gamePath, executable);
       if (fs.existsSync(executablePath)) {
         console.log(`Found executable: ${executablePath}`);
-        const { exec, spawn } = require('child_process');
-
+        
         if (executable.endsWith('.html') || executable.endsWith('.htm')) {
           // For web games, open in default browser
-          const { shell } = require('electron');
           shell.openPath(executablePath);
           return { success: true };
         } else {
@@ -600,7 +601,6 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
     // Search recursively for executables
     const foundExecutable = findExecutableRecursively(gamePath);
     if (foundExecutable) {
-      const { exec, spawn } = require('child_process');
       const execOptions = {
         cwd: path.dirname(foundExecutable),
         detached: false,
@@ -695,7 +695,6 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
 
     // If still no executable found, open the directory
     console.log(`No executable found for ${gameName}, opening directory: ${gamePath}`);
-    const { shell } = require('electron');
     shell.openPath(gamePath);
     return { success: true };
   } catch (error) {
@@ -756,7 +755,6 @@ ipcMain.handle('delete-game', async (event, gameName: string) => {
     }
     
     // Remove the game directory and all its contents
-    const { rmSync } = require('fs');
     rmSync(gamePath, { recursive: true, force: true });
     
     return { success: true };

@@ -4,6 +4,10 @@ import * as fs from 'fs';
 import { simpleGit } from 'simple-git';
 import fetch from 'node-fetch';
 import extract from 'extract-zip';
+import { execSync } from 'child_process';
+import { exec, spawn, ChildProcess } from 'child_process';
+import { shell } from 'electron';
+import { rmSync } from 'fs';
 
 // --- GPU/Software Rendering Flags for Pi Compatibility ---
 app.disableHardwareAcceleration();
@@ -146,7 +150,7 @@ ipcMain.handle('clone-game', async (event, repoUrl: string, gameName: string) =>
     
     // Fix permissions after cloning
     try {
-      require('child_process').execSync(`chmod -R 755 "${gamePath}"`);
+      execSync(`chmod -R 755 "${gamePath}"`);
       console.log('Permissions fixed for', gamePath);
     } catch (e) {
       console.warn('Could not set permissions:', e);
@@ -195,7 +199,7 @@ ipcMain.handle('install-zip-game', async (event, downloadUrl: string, gameName: 
     
     // Fix permissions after extraction
     try {
-      require('child_process').execSync(`chmod -R 755 "${gamePath}"`);
+      execSync(`chmod -R 755 "${gamePath}"`);
       console.log('Permissions fixed for', gamePath);
     } catch (e) {
       console.warn('Could not set permissions:', e);
@@ -488,11 +492,10 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
       const executablePath = path.join(gamePath, executable);
       if (fs.existsSync(executablePath)) {
         console.log(`Found executable: ${executablePath}`);
-        const { exec, spawn } = require('child_process');
+        // Already imported at top
 
         if (executable.endsWith('.html') || executable.endsWith('.htm')) {
           // For web games, open in default browser
-          const { shell } = require('electron');
           shell.openPath(executablePath);
           return { success: true };
         } else {
@@ -510,7 +513,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
               fs.chmodSync(executablePath, '755');
             }
             // Use spawn for better process management
-            const childProcess = spawn(executablePath, [], execOptions);
+            const childProcess: ChildProcess = spawn(executablePath, [], { ...execOptions, stdio: 'ignore' });
             
             // Track when the process ends
             childProcess.on('exit', (code: number, signal: string) => {
@@ -525,7 +528,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
             });
           } catch (chmodError) {
             // If chmod fails, try running anyway
-            const childProcess = spawn(executablePath, [], execOptions);
+            const childProcess: ChildProcess = spawn(executablePath, [], { ...execOptions, stdio: 'ignore' });
             
             // Track when the process ends
             childProcess.on('exit', (code: number, signal: string) => {
@@ -579,7 +582,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
     // Search recursively for executables
     const foundExecutable = findExecutableRecursively(gamePath);
     if (foundExecutable) {
-      const { exec, spawn } = require('child_process');
+      // Already imported at top
       const execOptions = {
         cwd: path.dirname(foundExecutable),
         detached: true,
@@ -590,7 +593,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
       try {
         // Make file executable
         fs.chmodSync(foundExecutable, '755');
-        const childProcess = spawn(foundExecutable, [], execOptions);
+        const childProcess: ChildProcess = spawn(foundExecutable, [], { ...execOptions, stdio: 'ignore' });
         
         // Track when the process ends
         childProcess.on('exit', (code: number, signal: string) => {
@@ -604,7 +607,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
           // Don't end session on error, let it continue running
         });
       } catch (chmodError) {
-        const childProcess = spawn(foundExecutable, [], execOptions);
+        const childProcess: ChildProcess = spawn(foundExecutable, [], { ...execOptions, stdio: 'ignore' });
         
         // Track when the process ends
         childProcess.on('exit', (code: number, signal: string) => {
@@ -623,7 +626,6 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
 
     // If still no executable found, open the directory
     console.log(`No executable found for ${gameName}, opening directory: ${gamePath}`);
-    const { shell } = require('electron');
     shell.openPath(gamePath);
     return { success: true };
   } catch (error) {
@@ -672,7 +674,6 @@ ipcMain.handle('delete-game', async (event, gameName: string) => {
     }
     
     // Remove the game directory and all its contents
-    const { rmSync } = require('fs');
     rmSync(gamePath, { recursive: true, force: true });
     
     return { success: true };
