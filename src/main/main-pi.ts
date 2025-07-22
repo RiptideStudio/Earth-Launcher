@@ -86,6 +86,8 @@ function createWindow(): void {
       mainWindow.webContents.openDevTools();
     }
   } else {
+    // Open dev tools in production for debugging
+    mainWindow.webContents.openDevTools();
     const rendererPath = path.join(__dirname, '../dist/renderer/index.html');
     console.log('Attempting to load renderer from:', rendererPath);
     console.log('Renderer file exists:', fs.existsSync(rendererPath));
