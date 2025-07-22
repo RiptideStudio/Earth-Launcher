@@ -14,7 +14,7 @@
     "build:main": "tsc -p tsconfig.main.json",
     "build:pi": "npm run build:renderer && tsc -p tsconfig.main.json",
     "dist": "electron-builder",
-    "dist:pi": "npm run build:pi && electron-builder --linux arm64",
+    "dist:pi": "npm run build:pi && electron-builder --linux AppImage --arm64",
     "start": "electron .",
     "start:pi": "electron . --enable-logging"
   },
@@ -57,6 +57,7 @@
       "output": "release"
     },
     "files": [
+      "dist",
       "dist/**/*",
       "node_modules/**/*"
     ],
