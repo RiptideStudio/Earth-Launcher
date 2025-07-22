@@ -4,6 +4,21 @@ import App from './App'
 import './index.css'
 import { HashRouter } from 'react-router-dom';
 
+// Add debugging to see what's happening
+console.log('Renderer script starting...');
+console.log('Document ready state:', document.readyState);
+console.log('Root element exists:', !!document.getElementById('root'));
+
+// Check if CSS is loaded
+const styles = document.querySelectorAll('link[rel="stylesheet"]');
+console.log('CSS files found:', styles.length);
+styles.forEach((link, i) => {
+  console.log(`CSS ${i}:`, (link as HTMLLinkElement).href);
+});
+
+// Check if our script loaded
+console.log('Main script loaded successfully');
+
 // Debug: Check if electronAPI is available
 console.log('Window object:', window);
 console.log('electronAPI available:', typeof window.electronAPI !== 'undefined');
