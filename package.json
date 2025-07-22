@@ -61,22 +61,8 @@
       "node_modules/**/*"
     ],
     "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
-      ],
+      "target": "AppImage",
+      "arch": "arm64",
       "icon": "icon.png",
       "category": "Game"
     },
