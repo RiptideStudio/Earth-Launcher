@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
+import { HashRouter } from 'react-router-dom';
 
 // Debug: Check if electronAPI is available
 console.log('Window object:', window);
@@ -9,12 +10,14 @@ console.log('electronAPI available:', typeof window.electronAPI !== 'undefined')
 if (typeof window.electronAPI !== 'undefined') {
   console.log('electronAPI methods:', Object.keys(window.electronAPI));
   // Test a simple method
-  try {
-    const result = await window.electronAPI.getInstalledGames();
-    console.log('✅ electronAPI test successful:', result);
-  } catch (error) {
-    console.error('❌ electronAPI test failed:', error);
-  }
+  (async () => {
+    try {
+      const result = await window.electronAPI.getInstalledGames();
+      console.log('✅ electronAPI test successful:', result);
+    } catch (error) {
+      console.error('❌ electronAPI test failed:', error);
+    }
+  })();
 } else {
   console.error('electronAPI is not available!');
   console.log('This might be because:');
@@ -25,6 +28,8 @@ if (typeof window.electronAPI !== 'undefined') {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <HashRouter>
+      <App />
+    </HashRouter>
   </React.StrictMode>,
 ) 

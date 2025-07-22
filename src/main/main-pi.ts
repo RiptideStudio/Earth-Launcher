@@ -42,8 +42,6 @@ function createWindow(): void {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
-      // Pi 4 optimizations
-      enableRemoteModule: false,
       backgroundThrottling: false,
       webSecurity: true
     },
@@ -57,7 +55,29 @@ function createWindow(): void {
     })
   };
 
-  mainWindow = new BrowserWindow(windowOptions);
+  mainWindow = new BrowserWindow({
+    x: 100,
+    y: 100,
+    width: 1200,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      backgroundThrottling: false,
+      webSecurity: true
+    },
+    titleBarStyle: 'default' as const,
+    show: false,
+    // Pi 4 specific optimizations
+    ...(isPi4 && {
+      fullscreenable: false,
+      resizable: true,
+      maximizable: false
+    })
+  });
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
@@ -70,6 +90,9 @@ function createWindow(): void {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
+    mainWindow?.focus();
+    mainWindow?.setAlwaysOnTop(true);
+    setTimeout(() => mainWindow?.setAlwaysOnTop(false), 2000);
   });
 
   mainWindow.on('closed', () => {

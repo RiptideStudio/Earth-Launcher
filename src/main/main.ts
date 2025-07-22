@@ -10,11 +10,12 @@ import extract from 'extract-zip';
 import { exec, spawn } from 'child_process';
 import { shell } from 'electron';
 import { rmSync } from 'fs';
+import { ChildProcess } from 'child_process';
 
 console.log('Starting main process: main.ts');
 
 let mainWindow: BrowserWindow | null = null;
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const isDev = false;
 
 async function createWindow(): Promise<void> {
   console.log('Creating Electron window...');
@@ -23,6 +24,8 @@ async function createWindow(): Promise<void> {
   console.log('Preload script exists:', fs.existsSync(preloadPath));
   
   mainWindow = new BrowserWindow({
+    x: 100,
+    y: 100,
     width: 1200,
     height: 800,
     minWidth: 800,
@@ -72,13 +75,27 @@ async function createWindow(): Promise<void> {
     
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    const rendererPath = path.resolve(process.cwd(), 'dist/renderer/index.html');
+    console.log('Attempting to load renderer from:', rendererPath);
+    console.log('Renderer file exists:', fs.existsSync(rendererPath));
+    if (!fs.existsSync(rendererPath)) {
+      console.error('Renderer HTML file does not exist!');
+    }
+    mainWindow.loadFile(rendererPath)
+      .then(() => {
+        console.log('Renderer loaded successfully!');
+      })
+      .catch((err) => {
+        console.error('Failed to load renderer:', err);
+      });
   }
 
   console.log('Setting up window events...');
   mainWindow.once('ready-to-show', () => {
-    console.log('Window ready to show, showing window...');
     mainWindow?.show();
+    mainWindow?.focus();
+    mainWindow?.setAlwaysOnTop(true);
+    setTimeout(() => mainWindow?.setAlwaysOnTop(false), 2000);
   });
 
   mainWindow.on('closed', () => {
@@ -505,7 +522,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
                 fs.chmodSync(executablePath, '755');
               }
               // Use spawn for better process management
-              const childProcess = spawn(executablePath, [], execOptions);
+              const childProcess: ChildProcess = spawn(executablePath, [], { ...execOptions, stdio: 'ignore' });
               
               // Track when the process ends
               childProcess.on('exit', (code: number, signal: string) => {
@@ -532,7 +549,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
               }
             } catch (chmodError) {
               // If chmod fails, try running anyway
-              const childProcess = spawn(executablePath, [], execOptions);
+              const childProcess: ChildProcess = spawn(executablePath, [], { ...execOptions, stdio: 'ignore' });
               
               // Track when the process ends
               childProcess.on('exit', (code: number, signal: string) => {
@@ -637,7 +654,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
           try {
             // Make file executable
             fs.chmodSync(foundExecutable, '755');
-            const childProcess = spawn(foundExecutable, [], execOptions);
+            const childProcess: ChildProcess = spawn(foundExecutable, [], { ...execOptions, stdio: ['ignore', 'pipe', 'pipe'] });
             
             // Track when the process ends
             childProcess.on('exit', (code: number, signal: string) => {
@@ -663,7 +680,7 @@ ipcMain.handle('launch-game', async (event, gameName: string) => {
               });
             }
           } catch (chmodError) {
-            const childProcess = spawn(foundExecutable, [], execOptions);
+            const childProcess: ChildProcess = spawn(foundExecutable, [], { ...execOptions, stdio: ['ignore', 'pipe', 'pipe'] });
             
             // Track when the process ends
             childProcess.on('exit', (code: number, signal: string) => {
