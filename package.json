@@ -62,7 +62,6 @@
     ],
     "linux": {
       "target": "AppImage",
-      "arch": "arm64",
       "icon": "icon.png",
       "category": "Game"
     },
