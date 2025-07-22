@@ -2,7 +2,7 @@
   "name": "earth-launcher",
   "version": "1.0.0",
   "description": "A modern desktop game launcher for Earth Library",
-  "main": "dist/main.js",
+  "main": "dist/main-pi.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:main\"",
     "dev:renderer": "vite",
@@ -12,7 +12,7 @@
     "build": "npm run build:renderer && npm run build:main",
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
-    "build:pi": "npm run build:renderer && tsc -p tsconfig.main.json && cp src/main/main-pi.ts dist/main-pi.js",
+    "build:pi": "npm run build:renderer && tsc -p tsconfig.main.json",
     "dist": "electron-builder",
     "dist:pi": "npm run build:pi && electron-builder --linux arm64",
     "start": "electron .",
