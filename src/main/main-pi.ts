@@ -85,7 +85,7 @@ function createWindow(): void {
       mainWindow.webContents.openDevTools();
     }
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    mainWindow.loadFile(path.join(process.resourcesPath, 'dist/renderer/index.html'));
   }
 
   mainWindow.once('ready-to-show', () => {
