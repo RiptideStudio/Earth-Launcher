@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+console.log('Preload script loaded successfully');
+
 contextBridge.exposeInMainWorld('electronAPI', {
   getGamesDirectory: () => ipcRenderer.invoke('get-games-directory'),
   cloneGame: (repoUrl: string, gameName: string) =>

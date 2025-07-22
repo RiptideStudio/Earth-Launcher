@@ -14,6 +14,10 @@ const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 async function createWindow(): Promise<void> {
   console.log('Creating Electron window...');
+  const preloadPath = path.join(__dirname, 'preload.js');
+  console.log('Preload script path:', preloadPath);
+  console.log('Preload script exists:', fs.existsSync(preloadPath));
+  
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -22,7 +26,7 @@ async function createWindow(): Promise<void> {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: preloadPath
     },
     titleBarStyle: 'default',
     show: false

@@ -5,6 +5,20 @@ import { simpleGit } from 'simple-git';
 import fetch from 'node-fetch';
 import extract from 'extract-zip';
 
+// --- GPU/Software Rendering Flags for Pi Compatibility ---
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.commandLine.appendSwitch('disable-accelerated-2d-canvas');
+app.commandLine.appendSwitch('disable-accelerated-jpeg-decoding');
+app.commandLine.appendSwitch('disable-accelerated-mjpeg-decode');
+app.commandLine.appendSwitch('disable-accelerated-video-decode');
+app.commandLine.appendSwitch('disable-accelerated-video-encode');
+app.commandLine.appendSwitch('use-gl', 'swiftshader');
+app.commandLine.appendSwitch('no-sandbox');
+// --------------------------------------------------------
+
 console.log('Starting main process: main-pi.ts');
 
 let mainWindow: BrowserWindow | null = null;
@@ -130,6 +144,14 @@ ipcMain.handle('clone-game', async (event, repoUrl: string, gameName: string) =>
     const git = simpleGit();
     await git.clone(repoUrl, gamePath, ['--depth', '1', '--single-branch']);
     
+    // Fix permissions after cloning
+    try {
+      require('child_process').execSync(`chmod -R 755 "${gamePath}"`);
+      console.log('Permissions fixed for', gamePath);
+    } catch (e) {
+      console.warn('Could not set permissions:', e);
+    }
+    
     return { success: true, path: gamePath };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -170,6 +192,14 @@ ipcMain.handle('install-zip-game', async (event, downloadUrl: string, gameName: 
     
     // Extract the zip file
     await extract(zipPath, { dir: gamePath });
+    
+    // Fix permissions after extraction
+    try {
+      require('child_process').execSync(`chmod -R 755 "${gamePath}"`);
+      console.log('Permissions fixed for', gamePath);
+    } catch (e) {
+      console.warn('Could not set permissions:', e);
+    }
     
     // Remove the temporary zip file
     fs.unlinkSync(zipPath);
