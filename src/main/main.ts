@@ -75,7 +75,7 @@ async function createWindow(): Promise<void> {
     
     mainWindow.webContents.openDevTools();
   } else {
-    const rendererPath = path.resolve(process.cwd(), 'dist/renderer/index.html');
+    const rendererPath = path.join(process.resourcesPath, 'dist/renderer/index.html');
     console.log('Attempting to load renderer from:', rendererPath);
     console.log('Renderer file exists:', fs.existsSync(rendererPath));
     if (!fs.existsSync(rendererPath)) {
