@@ -43,7 +43,10 @@ if (typeof window.electronAPI !== 'undefined') {
 
 try {
   console.log('Attempting to render React app...');
-  ReactDOM.createRoot(document.getElementById('root')!).render(
+  console.log('Creating React root...');
+  const root = ReactDOM.createRoot(document.getElementById('root')!);
+  console.log('React root created, rendering...');
+  root.render(
     <React.StrictMode>
       <HashRouter>
         <App />
@@ -53,4 +56,8 @@ try {
   console.log('React app rendered successfully');
 } catch (error) {
   console.error('Error rendering React app:', error);
+  if (error instanceof Error) {
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+  }
 } 

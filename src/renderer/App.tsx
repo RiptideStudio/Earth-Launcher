@@ -8,9 +8,9 @@ import GameDetails from './pages/GameDetails';
 import Stats from './pages/Stats';
 
 const App: React.FC = () => (
-  <div className="flex h-screen bg-gray-900">
+  <div className="flex h-screen bg-gray-900" style={{ display: 'flex', height: '100vh', backgroundColor: '#111827' }}>
     <Sidebar />
-    <main className="flex-1 overflow-hidden">
+    <main className="flex-1 overflow-hidden" style={{ flex: 1, overflow: 'hidden' }}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/library" element={<Library />} />
