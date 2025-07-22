@@ -41,10 +41,16 @@ if (typeof window.electronAPI !== 'undefined') {
   console.log('3. IPC handlers not registered');
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>
-  </React.StrictMode>,
-) 
+try {
+  console.log('Attempting to render React app...');
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </React.StrictMode>,
+  );
+  console.log('React app rendered successfully');
+} catch (error) {
+  console.error('Error rendering React app:', error);
+} 
