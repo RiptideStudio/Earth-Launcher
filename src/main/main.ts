@@ -7,6 +7,8 @@ import * as zlib from 'zlib';
 import * as stream from 'stream';
 import { promisify } from 'util';
 
+console.log('Starting main process: main.ts');
+
 let mainWindow: BrowserWindow | null = null;
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -35,7 +37,12 @@ async function createWindow(): Promise<void> {
     for (const port of ports) {
       try {
         console.log(`Trying to connect to port ${port}...`);
-        await mainWindow.loadURL(`http://localhost:${port}`);
+        await Promise.race([
+          mainWindow.loadURL(`http://localhost:${port}`),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout')), 2000)
+          )
+        ]);
         connected = true;
         console.log(`Connected to Vite dev server on port ${port}`);
         break;
@@ -46,8 +53,13 @@ async function createWindow(): Promise<void> {
     
     if (!connected) {
       console.error('Failed to connect to Vite dev server on any port');
-      // Fallback to the default port
-      mainWindow.loadURL('http://localhost:3000');
+      // Try to load the file directly as fallback
+      try {
+        mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+        console.log('Loaded fallback HTML file');
+      } catch (fallbackError) {
+        console.error('Failed to load fallback file:', fallbackError);
+      }
     }
     
     mainWindow.webContents.openDevTools();

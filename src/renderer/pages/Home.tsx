@@ -18,6 +18,13 @@ const Home: React.FC = () => {
       try {
         setLoading(true);
         
+        // Check if electronAPI is available
+        if (typeof window.electronAPI === 'undefined') {
+          console.error('electronAPI is not available');
+          setStats({ totalGames: 0, totalHours: 0, totalLaunches: 0 });
+          return;
+        }
+        
         // Get installed games count
         const installedGames = await window.electronAPI.getInstalledGames();
         
@@ -36,6 +43,8 @@ const Home: React.FC = () => {
         });
       } catch (error) {
         console.error('Failed to load basic stats:', error);
+        // Set default values on error
+        setStats({ totalGames: 0, totalHours: 0, totalLaunches: 0 });
       } finally {
         setLoading(false);
       }

@@ -20,6 +20,14 @@ const Library: React.FC = () => {
       setLoading(true);
       setError('');
 
+      // Check if electronAPI is available
+      if (typeof window.electronAPI === 'undefined') {
+        console.error('electronAPI is not available');
+        setError('electronAPI is not available');
+        setGames([]);
+        return;
+      }
+
       console.log('Loading games...');
       const installedGames = await window.electronAPI.getInstalledGames();
       console.log('Installed games:', installedGames);
@@ -63,6 +71,12 @@ const Library: React.FC = () => {
 
   const handlePlayGame = async (gameName: string) => {
     try {
+      // Check if electronAPI is available
+      if (typeof window.electronAPI === 'undefined') {
+        alert('electronAPI is not available');
+        return;
+      }
+      
       const result = await window.electronAPI.launchGame(gameName);
       if (!result.success) {
         alert(`Failed to launch ${gameName}: ${result.error}`);

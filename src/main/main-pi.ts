@@ -5,6 +5,8 @@ import { simpleGit } from 'simple-git';
 import fetch from 'node-fetch';
 import extract from 'extract-zip';
 
+console.log('Starting main process: main-pi.ts');
+
 let mainWindow: BrowserWindow | null = null;
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -71,6 +73,16 @@ if (isPi4) {
   // Disable hardware acceleration if causing issues
   app.disableHardwareAcceleration();
   
+  // Force software rendering
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-software-rasterizer');
+  app.commandLine.appendSwitch('disable-gpu-sandbox');
+  app.commandLine.appendSwitch('disable-accelerated-2d-canvas');
+  app.commandLine.appendSwitch('disable-accelerated-jpeg-decoding');
+  app.commandLine.appendSwitch('disable-accelerated-mjpeg-decode');
+  app.commandLine.appendSwitch('disable-accelerated-video-decode');
+  app.commandLine.appendSwitch('disable-accelerated-video-encode');
+  
   // Set lower memory limits
   app.commandLine.appendSwitch('max-old-space-size', '512');
   app.commandLine.appendSwitch('disable-background-timer-throttling');
@@ -117,6 +129,50 @@ ipcMain.handle('clone-game', async (event, repoUrl: string, gameName: string) =>
     // Pi 4 optimized git operations
     const git = simpleGit();
     await git.clone(repoUrl, gamePath, ['--depth', '1', '--single-branch']);
+    
+    return { success: true, path: gamePath };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+});
+
+ipcMain.handle('install-zip-game', async (event, downloadUrl: string, gameName: string) => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const gamesPath = path.join(userDataPath, 'games');
+    const gamePath = path.join(gamesPath, gameName);
+    
+    if (fs.existsSync(gamePath)) {
+      throw new Error('Game already exists');
+    }
+    
+    // Create game directory
+    fs.mkdirSync(gamePath, { recursive: true });
+    
+    // Download and extract zip file
+    const zipPath = path.join(gamePath, 'temp.zip');
+    
+    // Download the zip file using node-fetch
+    const response = await fetch(downloadUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to download: ${response.statusText}`);
+    }
+    
+    const fileStream = fs.createWriteStream(zipPath);
+    await new Promise<void>((resolve, reject) => {
+      response.body?.pipe(fileStream);
+      fileStream.on('finish', () => {
+        fileStream.close();
+        resolve();
+      });
+      fileStream.on('error', reject);
+    });
+    
+    // Extract the zip file
+    await extract(zipPath, { dir: gamePath });
+    
+    // Remove the temporary zip file
+    fs.unlinkSync(zipPath);
     
     return { success: true, path: gamePath };
   } catch (error) {

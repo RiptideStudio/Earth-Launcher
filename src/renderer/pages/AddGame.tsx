@@ -83,10 +83,18 @@ const AddGame: React.FC = () => {
 
   const loadInstalledGames = async () => {
     try {
+      // Check if electronAPI is available
+      if (typeof window.electronAPI === 'undefined') {
+        console.error('electronAPI is not available');
+        setInstalledGames([]);
+        return;
+      }
+      
       const games = await window.electronAPI.getInstalledGames();
       setInstalledGames(games);
     } catch (error) {
       console.error('Failed to load installed games:', error);
+      setInstalledGames([]);
     }
   };
 
@@ -139,6 +147,11 @@ const AddGame: React.FC = () => {
         });
       }, 200);
 
+      // Check if electronAPI is available
+      if (typeof window.electronAPI === 'undefined') {
+        throw new Error('electronAPI is not available');
+      }
+      
       // Download and extract the zip file
       const result = await window.electronAPI.installZipGame(game.downloadUrl, game.name);
       
