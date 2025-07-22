@@ -96,6 +96,12 @@ function createWindow(): void {
       console.log('Current directory:', __dirname);
       console.log('Available files in current dir:', fs.readdirSync(__dirname));
     }
+    
+    // Listen for renderer console messages
+    mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+      console.log(`[Renderer ${level}] ${message} (${sourceId}:${line})`);
+    });
+    
     mainWindow.loadFile(rendererPath);
   }
 
