@@ -7,19 +7,23 @@ import AddGame from './pages/AddGame';
 import GameDetails from './pages/GameDetails';
 import Stats from './pages/Stats';
 
-const App: React.FC = () => (
-  <div className="flex h-screen bg-gray-900" style={{ display: 'flex', height: '100vh', backgroundColor: '#111827' }}>
-    <Sidebar />
-    <main className="flex-1 overflow-hidden" style={{ flex: 1, overflow: 'hidden' }}>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/library" element={<Library />} />
-        <Route path="/add-game" element={<AddGame />} />
-        <Route path="/game/:gameName" element={<GameDetails />} />
-        <Route path="/stats" element={<Stats />} />
-      </Routes>
-    </main>
-  </div>
-);
+const App: React.FC = () => {
+  console.log('App component rendering...');
+  return (
+    <div 
+      style={{ 
+        display: 'flex', 
+        height: '100vh', 
+        backgroundColor: 'red',
+        color: 'white',
+        fontSize: '24px',
+        padding: '20px'
+      }}
+    >
+      <h1>EARTH LAUNCHER IS WORKING!</h1>
+      <p>If you can see this red background and white text, React is rendering correctly.</p>
+    </div>
+  );
+};
 
 export default App; 
