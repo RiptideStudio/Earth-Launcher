@@ -1,166 +1,87 @@
 # Earth Launcher
 
-A modern desktop game launcher for the Earth Library. This application allows you to browse, download, and manage games from GitHub repositories with a beautiful and intuitive interface.
+A modern, lightweight game launcher for Raspberry Pi with a beautiful dark theme.
 
 ## Features
 
-- 🎮 **Game Library Management**: View all your installed games in a clean, organized interface
-- 📥 **GitHub Integration**: Download games directly from GitHub repositories
-- 🔄 **Auto Updates**: Keep your games up to date with automatic GitHub pulls
-- 🚀 **One-Click Launch**: Launch games with a single click
-- 🔍 **Search & Filter**: Find games quickly with search functionality
-- 📊 **Game Statistics**: Track play time, launch count, and other metrics
-- 🎨 **Modern UI**: Beautiful dark theme with smooth animations
-
-## Screenshots
-
-- **Home Dashboard**: Overview of your game library with quick actions
-- **Game Library**: Browse and manage all installed games
-- **Add Games**: Simple form to add new games from GitHub
-- **Game Details**: Detailed view with launch, update, and management options
+- 🎮 **Simple Game Management** - Add and launch games easily
+- 🌙 **Modern Dark Theme** - Beautiful, easy on the eyes
+- ⚡ **Lightweight** - Built with Python and tkinter, perfect for Pi
+- 🔍 **File Browser** - Browse to find game executables
+- 📊 **Status Checking** - See which games are installed/missing
+- 🖱️ **Double-click Launch** - Launch games with a simple double-click
 
 ## Installation
 
-### Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-- Git (for game downloads)
-
-### Setup
-
-1. **Clone the repository**
+1. **Download the files** to your Raspberry Pi
+2. **Make the installer executable:**
    ```bash
-   git clone https://github.com/yourusername/earth-launcher.git
-   cd earth-launcher
+   chmod +x install.sh
    ```
-
-2. **Install dependencies**
+3. **Run the installer:**
    ```bash
-   npm install
-   ```
-
-3. **Development mode**
-   ```bash
-   npm run dev
-   ```
-
-4. **Build for production**
-   ```bash
-   npm run build
-   npm run dist
+   ./install.sh
    ```
 
 ## Usage
 
-### Adding Games
+### Launch the App
+- **Desktop shortcut** - Double-click the Earth Launcher icon
+- **Applications menu** - Find "Earth Launcher" in the Games category
+- **Terminal** - Run `python3 earth_launcher.py`
 
-1. Navigate to the "Add Game" page
-2. Enter a GitHub repository URL (e.g., `https://github.com/username/game-repo`)
-3. The game name will be automatically extracted from the repository name
-4. Click "Add Game" to download and install the game
+### Add a Game
+1. Click **"Add Game"** button
+2. Enter a **game name** (e.g., "Minecraft")
+3. Click **"Browse"** to find the game executable
+4. Click **"Add Game"** to save
 
-### Game Requirements
+### Launch a Game
+- **Double-click** any game in the list
+- The game will launch in the background
+- Check the status bar for launch confirmation
 
-For a game to work properly in Earth Launcher, the GitHub repository should contain:
+## Requirements
 
-- **Executable files**: `game.exe`, `Game.exe`, `main.exe`, or similar
-- **Web games**: `index.html` or `index.htm` for browser-based games
-- **Documentation**: A `README.md` file describing the game
+- **Python 3** (usually pre-installed on Pi)
+- **tkinter** (usually pre-installed on Pi)
+- **Raspberry Pi OS** (or any Linux distribution)
 
-### Managing Games
-
-- **Launch**: Click the play button to start a game
-- **Update**: Use the refresh button to pull the latest changes from GitHub
-- **Details**: Click on a game to view detailed information and statistics
-- **Remove**: Delete games from your library (coming soon)
-
-## Development
-
-### Project Structure
+## File Structure
 
 ```
-earth-launcher/
-├── src/
-│   ├── main/           # Electron main process
-│   │   ├── main.ts     # Main window and IPC handlers
-│   │   └── preload.ts  # Preload script for security
-│   └── renderer/       # React frontend
-│       ├── components/ # Reusable UI components
-│       ├── pages/      # Page components
-│       └── main.tsx    # React entry point
-├── dist/               # Built files
-└── release/            # Distribution packages
+earth_launcher.py    # Main application
+install.sh          # Installation script
+README.md           # This file
 ```
 
-### Key Technologies
+## Data Storage
 
-- **Electron**: Desktop application framework
-- **React**: Frontend UI library
-- **TypeScript**: Type-safe JavaScript
-- **Tailwind CSS**: Utility-first CSS framework
-- **Lucide React**: Beautiful icons
-- **React Router**: Client-side routing
-- **Simple Git**: Git operations for game management
+Games are saved to: `~/.earth_launcher/games.json`
 
-### Building
+## Why This Approach?
 
+- ✅ **Native to Linux** - No Electron bloat
+- ✅ **Lightweight** - Perfect for Pi's limited resources
+- ✅ **Simple** - Easy to understand and modify
+- ✅ **Fast** - Instant startup and response
+- ✅ **Reliable** - Uses proven Python/tkinter stack
+
+## Troubleshooting
+
+**If the app doesn't start:**
 ```bash
-# Development
-npm run dev
-
-# Production build
-npm run build
-
-# Create distributable
-npm run dist
+python3 -c "import tkinter; print('tkinter is available')"
 ```
 
-## Configuration
+**If games don't launch:**
+- Make sure the executable has run permissions
+- Check that the path is correct
+- Try running the game manually first
 
-### Game Storage
-
-Games are stored in the user's application data directory:
-- **Windows**: `%APPDATA%/earth-launcher/games/`
-- **macOS**: `~/Library/Application Support/earth-launcher/games/`
-- **Linux**: `~/.config/earth-launcher/games/`
-
-### Supported Game Types
-
-- **Executable games**: `.exe`, `.app`, or binary files
-- **Web games**: HTML5 games with `index.html`
-- **Portable games**: Self-contained game packages
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/yourusername/earth-launcher/issues) page
-2. Create a new issue with detailed information
-3. Include your operating system and version information
-
-## Roadmap
-
-- [ ] Game categories and tags
-- [ ] Cloud save synchronization
-- [ ] Game mod support
-- [ ] Community features
-- [ ] Game achievements
-- [ ] Multiplayer game support
-- [ ] Game streaming integration
-
----
-
-Made with ❤️ for the Earth Library community 
+**To uninstall:**
+```bash
+rm ~/Desktop/earth-launcher.desktop
+sudo rm /usr/share/applications/earth-launcher.desktop
+rm -rf ~/.earth_launcher
+``` 
