@@ -19,6 +19,16 @@ styles.forEach((link, i) => {
 // Check if our script loaded
 console.log('Main script loaded successfully');
 
+// Test direct DOM manipulation
+console.log('Testing direct DOM manipulation...');
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  rootElement.innerHTML = '<div style="background-color: red; color: white; padding: 20px; font-size: 24px;">DIRECT DOM TEST - IF YOU SEE THIS, DOM IS WORKING</div>';
+  console.log('Direct DOM manipulation completed');
+} else {
+  console.error('Root element not found for direct DOM test');
+}
+
 // Debug: Check if electronAPI is available
 console.log('Window object:', window);
 console.log('electronAPI available:', typeof window.electronAPI !== 'undefined');
