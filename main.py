@@ -179,6 +179,9 @@ class GameLauncher:
                 
             # Extract the game with progress
             self.extract_with_progress(zip_path, game_path, game['name'])
+            
+            # Set execute permissions on the main executable
+            self.set_execute_permissions(game_path)
                 
             # Clean up zip file
             if zip_path.exists():
@@ -239,6 +242,32 @@ class GameLauncher:
                     game.pop('progress', None)
                     game.pop('action', None)
                     break
+                    
+    def set_execute_permissions(self, game_path):
+        """Set execute permissions on the main executable file"""
+        # Look for the main executable
+        main_executables = ['GameRuntime', 'game', 'main', 'start', 'run', 'launch', 'app', 'program']
+        
+        for exe_name in main_executables:
+            exe_path = game_path / exe_name
+            if exe_path.exists():
+                try:
+                    # Set execute permission (755)
+                    os.chmod(exe_path, 0o755)
+                    print(f"Set execute permissions on: {exe_path}")
+                    return
+                except Exception as e:
+                    print(f"Error setting permissions on {exe_path}: {e}")
+                    
+        # If no main executable found, try to find any file without extension
+        for file_path in game_path.iterdir():
+            if file_path.is_file() and not file_path.suffix and file_path.name[0].isupper():
+                try:
+                    os.chmod(file_path, 0o755)
+                    print(f"Set execute permissions on: {file_path}")
+                    return
+                except Exception as e:
+                    print(f"Error setting permissions on {file_path}: {e}")
             
     def delete_game(self, game):
         """Delete an installed game"""
@@ -270,15 +299,23 @@ class GameLauncher:
             
         # Look for any executable file (Linux) - this will find GameRuntime, etc.
         for exe_file in game_path.glob("*"):
-            if exe_file.is_file() and os.access(exe_file, os.X_OK):
-                print(f"Found executable file: {exe_file}")
-                try:
-                    subprocess.Popen([str(exe_file)], cwd=str(game_path))
-                    print(f"Successfully started: {exe_file}")
-                    return True
-                except Exception as e:
-                    print(f"Error running {exe_file}: {e}")
-                    continue
+            if exe_file.is_file():
+                # Check if it's executable OR if it looks like a main executable
+                is_executable = os.access(exe_file, os.X_OK)
+                is_main_executable = (
+                    exe_file.name.lower() in ['gameruntime', 'game', 'main', 'start', 'run', 'launch', 'app', 'program'] or
+                    (not exe_file.suffix and exe_file.name[0].isupper())  # Files without extension that start with capital letter
+                )
+                
+                if is_executable or is_main_executable:
+                    print(f"Found executable file: {exe_file}")
+                    try:
+                        subprocess.Popen([str(exe_file)], cwd=str(game_path))
+                        print(f"Successfully started: {exe_file}")
+                        return True
+                    except Exception as e:
+                        print(f"Error running {exe_file}: {e}")
+                        continue
                         
         # Look for common executable files as fallback
         executables = ['game', 'main', 'start', 'run', 'launch', 'app', 'program']
