@@ -268,15 +268,27 @@ class GameLauncher:
         for item in game_path.iterdir():
             print(f"  - {item.name}")
             
-        # Look for common executable files
-        executables = ['game', 'main', 'start', 'run', 'launch']
-        extensions = ['', '.py', '.sh', '.exe', '.bin']
+        # Look for any executable file (Linux) - this will find GameRuntime, etc.
+        for exe_file in game_path.glob("*"):
+            if exe_file.is_file() and os.access(exe_file, os.X_OK):
+                print(f"Found executable file: {exe_file}")
+                try:
+                    subprocess.Popen([str(exe_file)], cwd=str(game_path))
+                    print(f"Successfully started: {exe_file}")
+                    return True
+                except Exception as e:
+                    print(f"Error running {exe_file}: {e}")
+                    continue
+                        
+        # Look for common executable files as fallback
+        executables = ['game', 'main', 'start', 'run', 'launch', 'app', 'program']
+        extensions = ['', '.py', '.sh', '.exe', '.bin', '.elf']
         
         for exe in executables:
             for ext in extensions:
                 exe_path = game_path / f"{exe}{ext}"
                 if exe_path.exists():
-                    print(f"Found executable: {exe_path}")
+                    print(f"Found common executable: {exe_path}")
                     try:
                         # For Python files, use python interpreter
                         if ext == '.py':
@@ -288,17 +300,6 @@ class GameLauncher:
                     except Exception as e:
                         print(f"Error running {exe_path}: {e}")
                         continue
-                        
-        # If no common executable found, look for any .exe file
-        for exe_file in game_path.glob("*.exe"):
-            print(f"Found .exe file: {exe_file}")
-            try:
-                subprocess.Popen([str(exe_file)], cwd=str(game_path))
-                print(f"Successfully started: {exe_file}")
-                return True
-            except Exception as e:
-                print(f"Error running {exe_file}: {e}")
-                continue
                         
         # If no executable found, try to run any Python file
         for py_file in game_path.glob("*.py"):
