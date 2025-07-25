@@ -1,0 +1,19 @@
+{
+  "repo_owner": "RiptideStudio",
+  "repo_name": "Earth-Library",
+  "github_token": null,
+  "gpio_pins": {
+    "UP": 17,
+    "DOWN": 18,
+    "LEFT": 27,
+    "RIGHT": 22,
+    "A": 23,
+    "B": 24,
+    "START": 25,
+    "SELECT": 26
+  },
+  "display": {
+    "width": 800,
+    "height": 480
+  }
+} 
