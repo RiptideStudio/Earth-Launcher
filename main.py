@@ -309,8 +309,13 @@ class GameLauncher:
                 
                 if is_executable or is_main_executable:
                     print(f"Found executable file: {exe_file}")
+                    print(f"Absolute path: {exe_file.absolute()}")
+                    print(f"File exists: {exe_file.exists()}")
+                    print(f"File is file: {exe_file.is_file()}")
+                    
                     try:
-                        subprocess.Popen([str(exe_file)], cwd=str(game_path))
+                        # Use absolute path and run from the game directory
+                        subprocess.Popen([str(exe_file.absolute())], cwd=str(game_path))
                         print(f"Successfully started: {exe_file}")
                         return True
                     except Exception as e:
