@@ -346,6 +346,16 @@ class GameLauncher:
         if not os.environ.get('DISPLAY'):
             print("No X11 display detected. Please run 'startx' first or switch to desktop mode.")
             return False
+            
+        # Reset window manager state before launching game
+        try:
+            subprocess.run(['wmctrl', '-r', ':ACTIVE:', '-b', 'remove,fullscreen'], 
+                          capture_output=True, timeout=1)
+        except:
+            pass  # Ignore if wmctrl is not available
+            
+        # Store the game process for monitoring
+        self.current_game_process = None
         
 
         
@@ -371,9 +381,30 @@ class GameLauncher:
                     print(f"File is file: {exe_file.is_file()}")
                     
                     try:
+                        # Set up environment to prevent fullscreen issues
+                        env = os.environ.copy()
+                        env['SDL_VIDEO_WINDOW_POS'] = '0,0'
+                        env['SDL_VIDEO_CENTERED'] = '1'
+                        env['MONO_DEBUG'] = 'no-gdb-backtrace'
+                        env['MONO_ENV_OPTIONS'] = '--gc=sgen'
+                        
                         # Use absolute path and run from the game directory
-                        subprocess.Popen([str(exe_file.absolute())], cwd=str(game_path))
+                        process = subprocess.Popen([str(exe_file.absolute())], cwd=str(game_path), env=env)
+                        self.current_game_process = process
                         print(f"Successfully started: {exe_file}")
+                        
+                        # Give focus to the game window and minimize launcher
+                        time.sleep(0.5)  # Wait for game to start
+                        try:
+                            # Try to focus the game window
+                            subprocess.run(['wmctrl', '-a', game['name']], 
+                                         capture_output=True, timeout=1)
+                            # Minimize the launcher window
+                            subprocess.run(['wmctrl', '-r', 'Earth Launcher', '-b', 'add,hidden'], 
+                                         capture_output=True, timeout=1)
+                        except:
+                            pass  # Ignore if wmctrl is not available
+                            
                         return True
                     except Exception as e:
                         print(f"Error running {exe_file}: {e}")
@@ -564,31 +595,29 @@ class GameLauncher:
                 pygame.draw.rect(self.screen, BLUE, (10, y - 5, self.width - 20, 35))
                 
             # Game name with progress if installing
-            with self.progress_lock:
-                if game.get('installing', False):
-                    progress = game.get('progress', 0)
-                    action = game.get('action', 'Installing')
-                    name_with_progress = f"{game['name']} - {action} {progress:.1f}%"
-                    color = YELLOW  # Yellow for installing
-                else:
-                    name_with_progress = game['name']
-                    color = GREEN if is_installed else WHITE
-                    
+            if game.get('installing', False):
+                progress = game.get('progress', 0)
+                action = game.get('action', 'Installing')
+                name_with_progress = f"{game['name']} - {action} {progress:.1f}%"
+                color = YELLOW  # Yellow for installing
+            else:
+                name_with_progress = game['name']
+                color = GREEN if is_installed else WHITE
+                
             name_text = self.font_medium.render(name_with_progress, True, color)
             self.screen.blit(name_text, (20, y))
             
             # Status indicator (only show if not installing)
-            with self.progress_lock:
-                if not game.get('installing', False):
-                    status = "INSTALLED" if is_installed else "NOT INSTALLED"
-                    status_color = GREEN if is_installed else RED
-                    status_text = self.font_small.render(status, True, status_color)
-                    self.screen.blit(status_text, (self.width - 250, y + 5))
-                    
-                    # Size info
-                    size_mb = game['size'] / (1024 * 1024)
-                    size_text = self.font_small.render(f"{size_mb:.1f}MB", True, GRAY)
-                    self.screen.blit(size_text, (self.width - 80, y + 5))
+            if not game.get('installing', False):
+                status = "INSTALLED" if is_installed else "NOT INSTALLED"
+                status_color = GREEN if is_installed else RED
+                status_text = self.font_small.render(status, True, status_color)
+                self.screen.blit(status_text, (self.width - 250, y + 5))
+                
+                # Size info
+                size_mb = game['size'] / (1024 * 1024)
+                size_text = self.font_small.render(f"{size_mb:.1f}MB", True, GRAY)
+                self.screen.blit(size_text, (self.width - 80, y + 5))
             
         # Draw scroll indicator
         if len(self.games) > self.max_visible:
@@ -620,11 +649,24 @@ class GameLauncher:
         last_check = 0  # Track when we last checked installed games
         
         while running:
-            # Update installed games list (only every 30 frames to reduce overhead)
+            # Update installed games list (only every 10 seconds to reduce overhead)
             current_time = pygame.time.get_ticks()
-            if current_time - last_check > 500:  # Check every 500ms instead of every frame
+            if current_time - last_check > 10000:  # Check every 10 seconds
                 self.check_installed_games()
                 last_check = current_time
+            
+            # Check if current game has exited and restore launcher
+            if hasattr(self, 'current_game_process') and self.current_game_process:
+                if self.current_game_process.poll() is not None:  # Game has exited
+                    try:
+                        # Restore launcher window
+                        subprocess.run(['wmctrl', '-r', 'Earth Launcher', '-b', 'remove,hidden'], 
+                                     capture_output=True, timeout=1)
+                        subprocess.run(['wmctrl', '-a', 'Earth Launcher'], 
+                                     capture_output=True, timeout=1)
+                    except:
+                        pass
+                    self.current_game_process = None
             
             # Handle input
             running = self.handle_input()
