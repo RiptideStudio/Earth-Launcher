@@ -18,6 +18,7 @@ Type=Application
 Name=Earth Launcher
 Comment=Game launcher for Raspberry Pi handheld
 Exec=python3 $LAUNCHER_PATH
+Path=$CURRENT_DIR
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF

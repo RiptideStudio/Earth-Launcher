@@ -32,8 +32,8 @@ GPIO_PINS = {
     'RIGHT': 22,
     'A': 23,      # Select/Install
     'B': 24,      # Back/Delete
-    'START': 25,  # Exit
-    'SELECT': 26  # Refresh
+    'START': 11,  # Exit
+    'SELECT': 12  # Refresh
 }
 
 # Colors
@@ -52,7 +52,7 @@ class GameLauncher:
         # Set up display for handheld (adjust resolution as needed)
         self.width = 800
         self.height = 480
-        self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         pygame.display.set_caption("Earth Launcher")
         
         # Font setup
@@ -66,10 +66,14 @@ class GameLauncher:
         self.selected_index = 0
         self.scroll_offset = 0
         self.max_visible = 8
+        self.show_exit_button = False  # Track if we're showing exit button
         self.progress_lock = threading.Lock()  # Thread safety for progress updates
         
         # Load configuration
         self.load_config()
+        
+        # Update launcher from git
+        self.update_launcher()
         
         # Set up GPIO
         self.setup_gpio()
@@ -107,6 +111,42 @@ class GameLauncher:
         }
         with open(CONFIG_FILE, 'w') as f:
             json.dump(config, f, indent=2)
+            
+    def update_launcher(self):
+        """Update the launcher from git repository"""
+        try:
+            import subprocess
+            import os
+            
+            # Get the current directory (where the launcher is located)
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            
+            # Check if this is a git repository
+            if os.path.exists(os.path.join(current_dir, '.git')):
+                print("Updating launcher from git...")
+                
+                # Change to the launcher directory
+                os.chdir(current_dir)
+                
+                # Pull the latest changes
+                result = subprocess.run(['git', 'pull'], 
+                                      capture_output=True, 
+                                      text=True, 
+                                      timeout=30)
+                
+                if result.returncode == 0:
+                    print("Launcher updated successfully!")
+                    if result.stdout.strip():
+                        print(f"Changes: {result.stdout.strip()}")
+                else:
+                    print(f"Git pull failed: {result.stderr.strip()}")
+                    
+            else:
+                print("Not a git repository, skipping update")
+                
+        except Exception as e:
+            print(f"Error updating launcher: {e}")
+            # Continue running even if update fails
             
     def load_games(self):
         """Load games from GitHub repository"""
@@ -369,7 +409,10 @@ class GameLauncher:
             time.sleep(0.1)
             
         if GPIO.input(GPIO_PINS['A']) == GPIO.LOW:
-            if self.selected_index < len(self.games):
+            # Check if exit button is selected
+            if self.show_exit_button and self.selected_index >= len(self.games):
+                return False  # Exit the launcher
+            elif self.selected_index < len(self.games):
                 game = self.games[self.selected_index]
                 if game['name'] in self.installed_games:
                     print(f"Launching game: {game['name']}")
@@ -393,8 +436,34 @@ class GameLauncher:
         if GPIO.input(GPIO_PINS['START']) == GPIO.LOW:
             return False
             
+        # Exit fullscreen with START + SELECT combination
+        if GPIO.input(GPIO_PINS['START']) == GPIO.LOW and GPIO.input(GPIO_PINS['SELECT']) == GPIO.LOW:
+            pygame.quit()
+            return False
+            
+        # Emergency exit with any 3-button combination
+        buttons_pressed = sum([
+            GPIO.input(GPIO_PINS['UP']) == GPIO.LOW,
+            GPIO.input(GPIO_PINS['DOWN']) == GPIO.LOW,
+            GPIO.input(GPIO_PINS['LEFT']) == GPIO.LOW,
+            GPIO.input(GPIO_PINS['RIGHT']) == GPIO.LOW,
+            GPIO.input(GPIO_PINS['A']) == GPIO.LOW,
+            GPIO.input(GPIO_PINS['B']) == GPIO.LOW,
+            GPIO.input(GPIO_PINS['START']) == GPIO.LOW,
+            GPIO.input(GPIO_PINS['SELECT']) == GPIO.LOW
+        ])
+        if buttons_pressed >= 3:
+            print("Emergency exit triggered!")
+            pygame.quit()
+            return False
+            
         if GPIO.input(GPIO_PINS['SELECT']) == GPIO.LOW:
             self.load_games()
+            time.sleep(0.1)
+            
+        # Toggle exit button with LEFT button
+        if GPIO.input(GPIO_PINS['LEFT']) == GPIO.LOW:
+            self.show_exit_button = not self.show_exit_button
             time.sleep(0.1)
             
         # Handle keyboard input for testing
@@ -405,9 +474,15 @@ class GameLauncher:
                 if event.key == pygame.K_UP:
                     self.selected_index = max(0, self.selected_index - 1)
                 elif event.key == pygame.K_DOWN:
-                    self.selected_index = min(len(self.games) - 1, self.selected_index + 1)
+                    max_index = len(self.games) - 1
+                    if self.show_exit_button:
+                        max_index = len(self.games)  # Allow going to exit button
+                    self.selected_index = min(max_index, self.selected_index + 1)
                 elif event.key == pygame.K_RETURN:  # A button
-                    if self.selected_index < len(self.games):
+                    # Check if exit button is selected
+                    if self.show_exit_button and self.selected_index >= len(self.games):
+                        return False  # Exit the launcher
+                    elif self.selected_index < len(self.games):
                         game = self.games[self.selected_index]
                         if game['name'] in self.installed_games:
                             print(f"Launching game: {game['name']}")
@@ -426,6 +501,18 @@ class GameLauncher:
                             self.delete_game(game)
                 elif event.key == pygame.K_ESCAPE:  # START button
                     return False
+                elif event.key == pygame.K_F11:  # Toggle fullscreen
+                    pygame.display.toggle_fullscreen()
+                elif event.key == pygame.K_q:  # Quit (Mac-friendly)
+                    return False
+                elif event.key == pygame.K_F4:  # Force quit
+                    pygame.quit()
+                    return False
+                elif event.key == pygame.K_F12:  # Emergency exit
+                    pygame.quit()
+                    return False
+                elif event.key == pygame.K_LEFT:  # Toggle exit button
+                    self.show_exit_button = not self.show_exit_button
                 elif event.key == pygame.K_r:  # SELECT button
                     self.load_games()
                     
@@ -494,6 +581,21 @@ class GameLauncher:
             scroll_text = f"Page {self.scroll_offset // self.max_visible + 1}/{(len(self.games) - 1) // self.max_visible + 1}"
             scroll_surface = self.font_small.render(scroll_text, True, GRAY)
             self.screen.blit(scroll_surface, (20, self.height - 30))
+            
+        # Draw exit button if enabled
+        if self.show_exit_button:
+            exit_text = self.font_medium.render("EXIT", True, RED)
+            exit_rect = pygame.Rect(self.width - 120, self.height - 50, 100, 30)
+            
+            # Highlight if selected (when at the bottom of the list)
+            if self.selected_index >= len(self.games):
+                pygame.draw.rect(self.screen, RED, exit_rect)
+                exit_text = self.font_medium.render("EXIT", True, WHITE)
+            else:
+                pygame.draw.rect(self.screen, BLACK, exit_rect)
+                pygame.draw.rect(self.screen, RED, exit_rect, 2)
+                
+            self.screen.blit(exit_text, (self.width - 110, self.height - 45))
             
         pygame.display.flip()
         
