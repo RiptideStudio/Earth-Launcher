@@ -651,7 +651,7 @@ class GameLauncher:
         while running:
             # Update installed games list (only every 10 seconds to reduce overhead)
             current_time = pygame.time.get_ticks()
-            if current_time - last_check > 10000:  # Check every 10 seconds
+            if current_time - last_check > 2000:  # Check every 10 seconds
                 self.check_installed_games()
                 last_check = current_time
             
