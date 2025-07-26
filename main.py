@@ -642,7 +642,10 @@ class GameLauncher:
                 pygame.draw.rect(self.screen, BLACK, shutdown_rect)
                 pygame.draw.rect(self.screen, RED, shutdown_rect, 2)
                 
-            self.screen.blit(shutdown_text, (self.width - 130, self.height - 45))
+            # Center the text within the button
+            text_rect = shutdown_text.get_rect()
+            text_rect.center = shutdown_rect.center
+            self.screen.blit(shutdown_text, text_rect)
             
         pygame.display.flip()
         
