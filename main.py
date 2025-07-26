@@ -342,23 +342,28 @@ class GameLauncher:
         print(f"Attempting to run game: {game['name']}")
         print(f"Game path: {game_path}")
         
-        # Check if we're in terminal mode (no X11 display)
-        if not os.environ.get('DISPLAY'):
+        # Check if we're in terminal mode (no X11 display) - only once
+        if not hasattr(self, '_x11_started') and not os.environ.get('DISPLAY'):
             print("No X11 display detected - starting X11 server...")
             try:
-                # Start X11 server in background
+                # Start X11 server in background without blocking
                 subprocess.Popen(['startx', '--', ':0'], 
                                stdout=subprocess.DEVNULL, 
                                stderr=subprocess.DEVNULL)
-                time.sleep(3)  # Wait for X11 to start
                 os.environ['DISPLAY'] = ':0'
-                print("X11 server started")
+                self._x11_started = True
+                print("X11 server starting in background...")
             except Exception as e:
                 print(f"Failed to start X11: {e}")
-                print("Switching to desktop mode...")
-                subprocess.run(['sudo', 'systemctl', 'set-default', 'graphical.target'])
-                subprocess.run(['sudo', 'reboot'])
-                return False
+                self._x11_started = True  # Don't try again
+        
+        # Ensure proper X11 environment for games
+        if not os.environ.get('XAUTHORITY'):
+            os.environ['XAUTHORITY'] = '/home/callen/.Xauthority'
+        if not os.environ.get('XDG_RUNTIME_DIR'):
+            os.environ['XDG_RUNTIME_DIR'] = '/run/user/1000'
+        if not os.environ.get('DBUS_SESSION_BUS_ADDRESS'):
+            os.environ['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus'
         
         # List all files in the game directory for debugging
         print("Files in game directory:")
@@ -385,9 +390,17 @@ class GameLauncher:
                         # Set up environment for GUI applications
                         env = os.environ.copy()
                         env['DISPLAY'] = ':0'
+                        env['XAUTHORITY'] = '/home/callen/.Xauthority'
+                        env['XDG_RUNTIME_DIR'] = '/run/user/1000'
+                        env['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus'
                         
                         # Use absolute path and run from the game directory
-                        subprocess.Popen([str(exe_file.absolute())], cwd=str(game_path), env=env)
+                        # Use subprocess.run instead of Popen to ensure proper window focus
+                        subprocess.Popen([str(exe_file.absolute())], 
+                                       cwd=str(game_path), 
+                                       env=env,
+                                       stdout=subprocess.DEVNULL,
+                                       stderr=subprocess.DEVNULL)
                         print(f"Successfully started: {exe_file}")
                         return True
                     except Exception as e:
@@ -410,9 +423,17 @@ class GameLauncher:
                         
                         # For Python files, use python interpreter
                         if ext == '.py':
-                            subprocess.Popen([sys.executable, str(exe_path)], cwd=str(game_path), env=env)
+                            subprocess.Popen([sys.executable, str(exe_path)], 
+                                           cwd=str(game_path), 
+                                           env=env,
+                                           stdout=subprocess.DEVNULL,
+                                           stderr=subprocess.DEVNULL)
                         else:
-                            subprocess.Popen([str(exe_path)], cwd=str(game_path), env=env)
+                            subprocess.Popen([str(exe_path)], 
+                                           cwd=str(game_path), 
+                                           env=env,
+                                           stdout=subprocess.DEVNULL,
+                                           stderr=subprocess.DEVNULL)
                         print(f"Successfully started: {exe_path}")
                         return True
                     except Exception as e:
@@ -427,7 +448,11 @@ class GameLauncher:
                 env = os.environ.copy()
                 env['DISPLAY'] = ':0'
                 
-                subprocess.Popen([sys.executable, str(py_file)], cwd=str(game_path), env=env)
+                subprocess.Popen([sys.executable, str(py_file)], 
+                               cwd=str(game_path), 
+                               env=env,
+                               stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
                 print(f"Successfully started Python file: {py_file}")
                 return True
             except Exception as e:
@@ -464,14 +489,12 @@ class GameLauncher:
                     install_thread = threading.Thread(target=self.install_game, args=(game,))
                     install_thread.daemon = True
                     install_thread.start()
-            time.sleep(0.1)
             
         if GPIO.input(GPIO_PINS['B']) == GPIO.LOW:
             if self.selected_index < len(self.games):
                 game = self.games[self.selected_index]
                 if game['name'] in self.installed_games:
                     self.delete_game(game)
-            time.sleep(0.1)
             
         if GPIO.input(GPIO_PINS['START']) == GPIO.LOW:
             return False
@@ -499,12 +522,10 @@ class GameLauncher:
             
         if GPIO.input(GPIO_PINS['SELECT']) == GPIO.LOW:
             self.load_games()
-            time.sleep(0.1)
             
         # Toggle exit button with LEFT button
         if GPIO.input(GPIO_PINS['LEFT']) == GPIO.LOW:
             self.show_exit_button = not self.show_exit_button
-            time.sleep(0.1)
             
         # Handle keyboard input for testing
         for event in pygame.event.get():
@@ -643,10 +664,14 @@ class GameLauncher:
         """Main game loop"""
         running = True
         clock = pygame.time.Clock()
+        last_check = 0  # Track when we last checked installed games
         
         while running:
-            # Update installed games list
-            self.check_installed_games()
+            # Update installed games list (only every 30 frames to reduce overhead)
+            current_time = pygame.time.get_ticks()
+            if current_time - last_check > 500:  # Check every 500ms instead of every frame
+                self.check_installed_games()
+                last_check = current_time
             
             # Handle input
             running = self.handle_input()
