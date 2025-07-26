@@ -458,8 +458,10 @@ class GameLauncher:
             self.selected_index = min(max_index, self.selected_index + 1)
             
         if GPIO.input(GPIO_PINS['A']) == GPIO.LOW:
-            # Check if exit button is selected
+            # Check if shutdown button is selected
             if self.show_exit_button and self.selected_index >= len(self.games):
+                print("Shutting down Raspberry Pi...")
+                subprocess.run(['sudo', 'shutdown', '-h', 'now'])
                 return False  # Exit the launcher
             elif self.selected_index < len(self.games):
                 game = self.games[self.selected_index]
@@ -507,7 +509,7 @@ class GameLauncher:
         if GPIO.input(GPIO_PINS['SELECT']) == GPIO.LOW:
             self.load_games()
             
-        # Toggle exit button with LEFT button
+        # Toggle shutdown button with LEFT button
         if GPIO.input(GPIO_PINS['LEFT']) == GPIO.LOW:
             self.show_exit_button = not self.show_exit_button
             
@@ -524,8 +526,10 @@ class GameLauncher:
                         max_index = len(self.games)  # Allow going to exit button
                     self.selected_index = min(max_index, self.selected_index + 1)
                 elif event.key == pygame.K_RETURN:  # A button
-                    # Check if exit button is selected
+                    # Check if shutdown button is selected
                     if self.show_exit_button and self.selected_index >= len(self.games):
+                        print("Shutting down Raspberry Pi...")
+                        subprocess.run(['sudo', 'shutdown', '-h', 'now'])
                         return False  # Exit the launcher
                     elif self.selected_index < len(self.games):
                         game = self.games[self.selected_index]
@@ -556,7 +560,7 @@ class GameLauncher:
                 elif event.key == pygame.K_F12:  # Emergency exit
                     pygame.quit()
                     return False
-                elif event.key == pygame.K_LEFT:  # Toggle exit button
+                elif event.key == pygame.K_LEFT:  # Toggle shutdown button
                     self.show_exit_button = not self.show_exit_button
                 elif event.key == pygame.K_r:  # SELECT button
                     self.load_games()
@@ -625,20 +629,20 @@ class GameLauncher:
             scroll_surface = self.font_small.render(scroll_text, True, GRAY)
             self.screen.blit(scroll_surface, (20, self.height - 30))
             
-        # Draw exit button if enabled
+        # Draw shutdown button if enabled
         if self.show_exit_button:
-            exit_text = self.font_medium.render("EXIT", True, RED)
-            exit_rect = pygame.Rect(self.width - 120, self.height - 50, 100, 30)
+            shutdown_text = self.font_medium.render("SHUTDOWN", True, RED)
+            shutdown_rect = pygame.Rect(self.width - 140, self.height - 50, 120, 30)
             
             # Highlight if selected (when at the bottom of the list)
             if self.selected_index >= len(self.games):
-                pygame.draw.rect(self.screen, RED, exit_rect)
-                exit_text = self.font_medium.render("EXIT", True, WHITE)
+                pygame.draw.rect(self.screen, RED, shutdown_rect)
+                shutdown_text = self.font_medium.render("SHUTDOWN", True, WHITE)
             else:
-                pygame.draw.rect(self.screen, BLACK, exit_rect)
-                pygame.draw.rect(self.screen, RED, exit_rect, 2)
+                pygame.draw.rect(self.screen, BLACK, shutdown_rect)
+                pygame.draw.rect(self.screen, RED, shutdown_rect, 2)
                 
-            self.screen.blit(exit_text, (self.width - 110, self.height - 45))
+            self.screen.blit(shutdown_text, (self.width - 130, self.height - 45))
             
         pygame.display.flip()
         
