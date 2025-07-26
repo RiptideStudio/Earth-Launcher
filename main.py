@@ -467,11 +467,12 @@ class GameLauncher:
         # Check GPIO buttons
         if GPIO.input(GPIO_PINS['UP']) == GPIO.LOW:
             self.selected_index = max(0, self.selected_index - 1)
-            time.sleep(0.1)
             
         if GPIO.input(GPIO_PINS['DOWN']) == GPIO.LOW:
-            self.selected_index = min(len(self.games) - 1, self.selected_index + 1)
-            time.sleep(0.1)
+            max_index = len(self.games) - 1
+            if self.show_exit_button:
+                max_index = len(self.games)  # Allow going to exit button
+            self.selected_index = min(max_index, self.selected_index + 1)
             
         if GPIO.input(GPIO_PINS['A']) == GPIO.LOW:
             # Check if exit button is selected
