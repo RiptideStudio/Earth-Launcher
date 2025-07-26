@@ -342,6 +342,24 @@ class GameLauncher:
         print(f"Attempting to run game: {game['name']}")
         print(f"Game path: {game_path}")
         
+        # Check if we're in terminal mode (no X11 display)
+        if not os.environ.get('DISPLAY'):
+            print("No X11 display detected - starting X11 server...")
+            try:
+                # Start X11 server in background
+                subprocess.Popen(['startx', '--', ':0'], 
+                               stdout=subprocess.DEVNULL, 
+                               stderr=subprocess.DEVNULL)
+                time.sleep(3)  # Wait for X11 to start
+                os.environ['DISPLAY'] = ':0'
+                print("X11 server started")
+            except Exception as e:
+                print(f"Failed to start X11: {e}")
+                print("Switching to desktop mode...")
+                subprocess.run(['sudo', 'systemctl', 'set-default', 'graphical.target'])
+                subprocess.run(['sudo', 'reboot'])
+                return False
+        
         # List all files in the game directory for debugging
         print("Files in game directory:")
         for item in game_path.iterdir():
@@ -364,8 +382,12 @@ class GameLauncher:
                     print(f"File is file: {exe_file.is_file()}")
                     
                     try:
+                        # Set up environment for GUI applications
+                        env = os.environ.copy()
+                        env['DISPLAY'] = ':0'
+                        
                         # Use absolute path and run from the game directory
-                        subprocess.Popen([str(exe_file.absolute())], cwd=str(game_path))
+                        subprocess.Popen([str(exe_file.absolute())], cwd=str(game_path), env=env)
                         print(f"Successfully started: {exe_file}")
                         return True
                     except Exception as e:
@@ -382,11 +404,15 @@ class GameLauncher:
                 if exe_path.exists():
                     print(f"Found common executable: {exe_path}")
                     try:
+                        # Set up environment for GUI applications
+                        env = os.environ.copy()
+                        env['DISPLAY'] = ':0'
+                        
                         # For Python files, use python interpreter
                         if ext == '.py':
-                            subprocess.Popen([sys.executable, str(exe_path)], cwd=str(game_path))
+                            subprocess.Popen([sys.executable, str(exe_path)], cwd=str(game_path), env=env)
                         else:
-                            subprocess.Popen([str(exe_path)], cwd=str(game_path))
+                            subprocess.Popen([str(exe_path)], cwd=str(game_path), env=env)
                         print(f"Successfully started: {exe_path}")
                         return True
                     except Exception as e:
@@ -397,7 +423,11 @@ class GameLauncher:
         for py_file in game_path.glob("*.py"):
             print(f"Trying Python file: {py_file}")
             try:
-                subprocess.Popen([sys.executable, str(py_file)], cwd=str(game_path))
+                # Set up environment for GUI applications
+                env = os.environ.copy()
+                env['DISPLAY'] = ':0'
+                
+                subprocess.Popen([sys.executable, str(py_file)], cwd=str(game_path), env=env)
                 print(f"Successfully started Python file: {py_file}")
                 return True
             except Exception as e:
