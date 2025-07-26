@@ -20,8 +20,8 @@ import RPi.GPIO as GPIO
 # Configuration
 CONFIG_FILE = "config.json"
 GAMES_DIR = "games"
-REPO_OWNER = "your_username"  # Change this to your GitHub username
-REPO_NAME = "your_games_repo"  # Change this to your games repository name
+REPO_OWNER = "RiptideStudio"  # Change this to your GitHub username
+REPO_NAME = "Earth-Launcher"  # Change this to your games repository name
 GITHUB_TOKEN = None  # Set this if you have a GitHub token for private repos
 
 # GPIO Pin Configuration (adjust these to match your hardware)
@@ -95,11 +95,16 @@ class GameLauncher:
             try:
                 with open(CONFIG_FILE, 'r') as f:
                     config = json.load(f)
-                    global REPO_OWNER, REPO_NAME, GITHUB_TOKEN
+                    global REPO_OWNER, REPO_NAME, GITHUB_TOKEN, GPIO_PINS
                     REPO_OWNER = config.get('repo_owner', REPO_OWNER)
                     REPO_NAME = config.get('repo_name', REPO_NAME)
                     GITHUB_TOKEN = config.get('github_token', GITHUB_TOKEN)
-            except:
+                    
+                    # Load GPIO pins from config if available
+                    if 'gpio_pins' in config:
+                        GPIO_PINS.update(config['gpio_pins'])
+            except Exception as e:
+                print(f"Error loading config: {e}")
                 pass
                 
     def save_config(self):

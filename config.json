@@ -9,8 +9,8 @@
     "RIGHT": 22,
     "A": 23,
     "B": 24,
-    "START": 25,
-    "SELECT": 26
+    "START": 11,
+    "SELECT": 12
   },
   "display": {
     "width": 800,
