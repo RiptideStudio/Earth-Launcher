@@ -21,7 +21,7 @@ import RPi.GPIO as GPIO
 CONFIG_FILE = "config.json"
 GAMES_DIR = "games"
 REPO_OWNER = "RiptideStudio"  # Change this to your GitHub username
-REPO_NAME = "Earth-Launcher"  # Change this to your games repository name
+REPO_NAME = "Earth-Library"  # Change this to your games repository name
 GITHUB_TOKEN = None  # Set this if you have a GitHub token for private repos
 
 # GPIO Pin Configuration (adjust these to match your hardware)
@@ -66,7 +66,7 @@ class GameLauncher:
         self.selected_index = 0
         self.scroll_offset = 0
         self.max_visible = 8
-        self.show_exit_button = False  # Track if we're showing exit button
+        self.show_exit_button = True  # Show exit button by default
         self.progress_lock = threading.Lock()  # Thread safety for progress updates
         
         # Load configuration
@@ -156,6 +156,8 @@ class GameLauncher:
     def load_games(self):
         """Load games from GitHub repository"""
         try:
+            print(f"Loading games from {REPO_OWNER}/{REPO_NAME}...")
+            
             if GITHUB_TOKEN:
                 g = Github(GITHUB_TOKEN)
             else:
@@ -174,8 +176,11 @@ class GameLauncher:
                         'size': content.size
                     })
                     
+            print(f"Found {len(self.games)} games in repository")
+                    
         except Exception as e:
-            print(f"Error loading games: {e}")
+            print(f"Error loading games from GitHub: {e}")
+            print("Falling back to local games directory...")
             # Fallback to local games directory
             self.load_local_games()
             
