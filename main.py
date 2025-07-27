@@ -26,14 +26,14 @@ GITHUB_TOKEN = None  # Set this if you have a GitHub token for private repos
 
 # GPIO Pin Configuration (adjust these to match your hardware)
 GPIO_PINS = {
-    'UP': 17,
-    'DOWN': 18,
-    'LEFT': 27,
-    'RIGHT': 22,
-    'A': 23,      # Select/Install
-    'B': 24,      # Back/Delete
-    'START': 11,  # Exit
-    'SELECT': 12  # Refresh
+    'UP': 27,
+    'DOWN': 22,
+    'LEFT': 23,
+    'RIGHT': 24,
+    'A': 4,      # Select/Install
+    'B': 14,      # Back/Delete
+    'START': 5,  # Exit
+    'SELECT': 6  # Refresh
 }
 
 # Colors
@@ -447,15 +447,19 @@ class GameLauncher:
         
     def handle_input(self):
         """Handle GPIO and keyboard input"""
-        # Check GPIO buttons
+        # Check GPIO buttons with debouncing
+        button_pressed = False
+        
         if GPIO.input(GPIO_PINS['UP']) == GPIO.LOW:
             self.selected_index = max(0, self.selected_index - 1)
+            button_pressed = True
             
         if GPIO.input(GPIO_PINS['DOWN']) == GPIO.LOW:
             max_index = len(self.games) - 1
             if self.show_exit_button:
                 max_index = len(self.games)  # Allow going to exit button
             self.selected_index = min(max_index, self.selected_index + 1)
+            button_pressed = True
             
         if GPIO.input(GPIO_PINS['A']) == GPIO.LOW:
             # Check if shutdown button is selected
@@ -475,12 +479,14 @@ class GameLauncher:
                     install_thread = threading.Thread(target=self.install_game, args=(game,))
                     install_thread.daemon = True
                     install_thread.start()
+            button_pressed = True
             
         if GPIO.input(GPIO_PINS['B']) == GPIO.LOW:
             if self.selected_index < len(self.games):
                 game = self.games[self.selected_index]
                 if game['name'] in self.installed_games:
                     self.delete_game(game)
+            button_pressed = True
             
         if GPIO.input(GPIO_PINS['START']) == GPIO.LOW:
             return False
@@ -508,10 +514,16 @@ class GameLauncher:
             
         if GPIO.input(GPIO_PINS['SELECT']) == GPIO.LOW:
             self.load_games()
+            button_pressed = True
             
         # Toggle shutdown button with LEFT button
         if GPIO.input(GPIO_PINS['LEFT']) == GPIO.LOW:
             self.show_exit_button = not self.show_exit_button
+            button_pressed = True
+            
+        # Add debouncing delay if any button was pressed
+        if button_pressed:
+            time.sleep(0.1)  # 100ms delay to prevent multiple triggers
             
         # Handle keyboard input for testing
         for event in pygame.event.get():
