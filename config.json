@@ -3,14 +3,14 @@
   "repo_name": "Earth-Library",
   "github_token": null,
   "gpio_pins": {
-    "UP": 17,
-    "DOWN": 18,
-    "LEFT": 27,
-    "RIGHT": 22,
-    "A": 23,
-    "B": 24,
-    "START": 11,
-    "SELECT": 12
+    "UP": 27,
+    "DOWN": 22,
+    "LEFT": 23,
+    "RIGHT": 24,
+    "A": 4,
+    "B": 14,
+    "START": 5,
+    "SELECT": 6
   },
   "display": {
     "width": 800,

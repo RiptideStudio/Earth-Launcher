@@ -24,7 +24,7 @@ REPO_OWNER = "RiptideStudio"  # Change this to your GitHub username
 REPO_NAME = "Earth-Library"  # Change this to your games repository name
 GITHUB_TOKEN = None  # Set this if you have a GitHub token for private repos
 
-# GPIO Pin Configuration (adjust these to match your hardware)
+# Default GPIO Pin Configuration (will be overridden by config.json)
 GPIO_PINS = {
     'UP': 27,
     'DOWN': 22,
@@ -49,6 +49,9 @@ class GameLauncher:
     def __init__(self):
         pygame.init()
         
+        # Load configuration first (before setting up display and GPIO)
+        self.load_config()
+        
         # Set up display for handheld (adjust resolution as needed)
         self.width = 800
         self.height = 480
@@ -69,13 +72,10 @@ class GameLauncher:
         self.show_exit_button = True  # Show exit button by default
         self.progress_lock = threading.Lock()  # Thread safety for progress updates
         
-        # Load configuration
-        self.load_config()
-        
         # Update launcher from git
         self.update_launcher()
         
-        # Set up GPIO
+        # Set up GPIO (after config is loaded)
         self.setup_gpio()
         
         # Load games
@@ -112,7 +112,8 @@ class GameLauncher:
         config = {
             'repo_owner': REPO_OWNER,
             'repo_name': REPO_NAME,
-            'github_token': GITHUB_TOKEN
+            'github_token': GITHUB_TOKEN,
+            'gpio_pins': GPIO_PINS
         }
         with open(CONFIG_FILE, 'w') as f:
             json.dump(config, f, indent=2)
